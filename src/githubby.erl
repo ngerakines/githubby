@@ -30,7 +30,9 @@
     user_repos_commits/3,
     user_repos_commits/4,
     user_followers/2,
-    user_following/2
+    user_following/2,
+	repos_search/2,
+	repos_info/3
 ]).
 
 -define(API_BASE, "http://github.com/api/v2/json").
@@ -59,14 +61,19 @@ user_following({Login, Token}, UserName) ->
     Url = lists:concat([?API_BASE, "/user/show/", UserName, "/following"]),
     request_url(get, Login, Token, Url).
 
+repos_search({Login, Token}, Query) ->
+	request_url(get, Login, Token, ?API_BASE ++ "/repos/search/" ++ Query).
+	
+repos_info({Login, Token}, User, Repo) ->
+	request_url(get, Login, Token, ?API_BASE ++ "/repos/show/" ++ User ++ "/" ++ Repo).
+	
 %% @private
 request_url(get, Login, Token, Url) ->
-    case http:request(get, {Url, headers(Login, Token)}, [{timeout, 6000}], []) of
-        {ok, {{_, 200, _}, _Headers, Body}} ->
-            mochijson2:decode(Body);
-        Other -> exit({unexpected_response, Other})
-    end.
+    {ok, {{_, _RespCode, _}, _Headers, Body}} = http:request(get, {Url, headers(Login, Token)}, [{timeout, 6000}], []),
+	mochijson2:decode(Body).
 
 %% @private
 headers(Login, Token) ->
-    [{"User-Agent", "GitHubby/0.1"}, {"Host", "github.com"}, {"login", Login}, {"token", Token}].
+    [{"User-Agent", "GitHubby/0.1"}, {"Host", "github.com"}] ++ 
+	[{"login", Login} || Login =/= undefined] ++
+	[{"token", Token} || Token =/= undefined].
