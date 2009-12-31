@@ -31,8 +31,10 @@
     user_repos_commits/4,
     user_followers/2,
     user_following/2,
-	repos_search/2,
-	repos_info/3
+    repos_refs/3,
+    repos_refs/4,
+    repos_search/2,
+    repos_info/3
 ]).
 
 -define(API_BASE, "http://github.com/api/v2/json").
@@ -59,6 +61,13 @@ user_followers({Login, Token}, UserName) ->
 
 user_following({Login, Token}, UserName) ->
     Url = lists:concat([?API_BASE, "/user/show/", UserName, "/following"]),
+    request_url(get, Login, Token, Url).
+
+repos_refs({Login, Token}, UserName, Repos) ->
+    repos_refs({Login, Token}, UserName, Repos, "branches").
+
+repos_refs({Login, Token}, UserName, Repos, Type) ->
+    Url = lists:concat([?API_BASE, "/repos/show/", UserName, "/", Repos, "/", Type]),
     request_url(get, Login, Token, Url).
 
 repos_search({Login, Token}, Query) ->
